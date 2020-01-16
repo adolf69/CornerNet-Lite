@@ -7,13 +7,16 @@ from .py_utils.utils import convolution, residual, corner_pool
 from .py_utils.losses import CornerNet_Loss
 from .py_utils.modules import hg_module, hg, hg_net
 
+
 def make_pool_layer(dim):
     return nn.Sequential()
 
+
 def make_hg_layer(inp_dim, out_dim, modules):
-    layers  = [residual(inp_dim, out_dim, stride=2)]
+    layers = [residual(inp_dim, out_dim, stride=2)]
     layers += [residual(out_dim, out_dim) for _ in range(1, modules)]
     return nn.Sequential(*layers)
+
 
 class model(hg_net):
     def _pred_mod(self, dim):
@@ -29,8 +32,8 @@ class model(hg_net):
         )
 
     def __init__(self):
-        stacks  = 2
-        pre     = nn.Sequential(
+        stacks = 2
+        pre = nn.Sequential(
             convolution(7, 3, 128, stride=2),
             residual(128, 256, stride=2)
         )
@@ -41,12 +44,12 @@ class model(hg_net):
                 make_hg_layer=make_hg_layer
             ) for _ in range(stacks)
         ])
-        cnvs    = nn.ModuleList([convolution(3, 256, 256) for _ in range(stacks)])
-        inters  = nn.ModuleList([residual(256, 256) for _ in range(stacks - 1)])
-        cnvs_   = nn.ModuleList([self._merge_mod() for _ in range(stacks - 1)])
+        cnvs = nn.ModuleList([convolution(3, 256, 256) for _ in range(stacks)])
+        inters = nn.ModuleList([residual(256, 256) for _ in range(stacks - 1)])
+        cnvs_ = nn.ModuleList([self._merge_mod() for _ in range(stacks - 1)])
         inters_ = nn.ModuleList([self._merge_mod() for _ in range(stacks - 1)])
 
-        hgs = hg(pre, hg_mods, cnvs, inters, cnvs_, inters_) 
+        hgs = hg(pre, hg_mods, cnvs, inters, cnvs_, inters_)
 
         tl_modules = nn.ModuleList([corner_pool(256, TopPool, LeftPool) for _ in range(stacks)])
         br_modules = nn.ModuleList([corner_pool(256, BottomPool, RightPool) for _ in range(stacks)])
@@ -64,8 +67,10 @@ class model(hg_net):
         br_offs = nn.ModuleList([self._pred_mod(2) for _ in range(stacks)])
 
         super(model, self).__init__(
-            hgs, tl_modules, br_modules, tl_heats, br_heats, 
+            hgs, tl_modules, br_modules, tl_heats, br_heats,
             tl_tags, br_tags, tl_offs, br_offs
         )
 
         self.loss = CornerNet_Loss(pull_weight=1e-1, push_weight=1e-1)
+
+print(111)
